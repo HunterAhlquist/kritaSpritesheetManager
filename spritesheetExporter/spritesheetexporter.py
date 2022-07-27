@@ -131,15 +131,18 @@ class SpritesheetExporter(object):
         def fileNum(num):
             return "_" + str(num).zfill(3)
 
-        def exportFrame(num, doc, debugging = False):
+        def exportFrame(num, doc, debugging = False, filenameSuffixOverride = ""):
             doc.waitForDone()
-            imagePath = str(spritesExportPath(fileNum(num) + ".png"))
+            if (not filenameSuffixOverride == ""):
+                imagePath = str(spritesExportPath(fileNum(filenameSuffixOverride) + ".png"))
+            else:
+                imagePath = str(spritesExportPath(fileNum(num) + ".png"))
             doc.exportImage(imagePath, InfoObject())
             if(debugging):
                 debugPrint("exporting frame " + str(num) + " at " + imagePath)
 
-        def getLayerState(layer, debugging = False):
-            if len(layer.childNodes()) != 0:
+        def getLayerState(layer, mergeGroups = False, debugging = False):
+            if len(layer.childNodes()) != 0 and not mergeGroups:
                 # if it was a group layer
                 # we also check its kids
                 for kid in layer.childNodes():
@@ -232,6 +235,34 @@ class SpritesheetExporter(object):
                 doc.setCurrentTime(frameIDNum)
             # reset
             frameIDNum = self.start
+        elif self.layersOnYAxis:
+
+            frameIDNum = 0
+            # save layers state (visible or not)
+            layers = doc.topLevelNodes()
+
+            for layer in layers:
+                getLayerState(layer, True, debugging)
+
+            framesNum = len(self.layersList) * self.columns;
+
+            for layer in self.layersList:
+                layer.setVisible(False)
+
+            curPos = 0;
+            for l in range(0, len(self.layersList)):
+                self.layersList[l].setVisible(True)
+                for f in range(0, self.columns):
+                    doc.setCurrentTime(f)
+                    doc.refreshProjection()
+                    exportFrame(f, doc, debugging, curPos)
+                    curPos += 1
+                self.layersList[l].setVisible(False)
+
+            # restore layers state
+            for l in range(0, len(self.layersList) - 1):
+                self.layersList[l].setVisible(self.layersStates[l])
+
         else:
             frameIDNum = 0
              # save layers state (visible or not)

@@ -362,12 +362,40 @@ class UISpritesheetExporter(object):
         if self.vertDir.isChecked() and self.layersOnYAxis.isChecked():
             self.vertDir.setChecked(False)
 
+        if self.layersOnYAxis.isChecked():
+            self.rows.setDisabled(True)
+            self.rows.setValue(len(self.doc.topLevelNodes()) - 1)
+
+            self.columns.setDisabled(True)
+            self.doc.setCurrentTime(0)
+            self.columns.setValue(self.doc.animationLength())
+
+            self.start.setDisabled(True)
+            self.start.setValue(self.doc.fullClipRangeStartTime())
+
+            self.end.setDisabled(True)
+            self.end.setValue(self.doc.animationLength())
+
+            self.step.setDisabled(True)
+            self.step.setValue(1)
+        else:
+            self.rows.setDisabled(False)
+            self.columns.setDisabled(False)
+            self.start.setDisabled(False)
+            self.end.setDisabled(False)
+            self.step.setDisabled(False)
+
     def exclusiveAnimToY(self):
         self.exclusiveCheckBoxOrNoneUpdate(
             trigger=self.layersAsAnimation,
             triggered=self.layersOnYAxis)
         if self.vertDir.isChecked() and self.layersOnYAxis.isChecked():
             self.vertDir.setChecked(False)
+        self.rows.setDisabled(False)
+        self.columns.setDisabled(False)
+        self.start.setDisabled(False)
+        self.end.setDisabled(False)
+        self.step.setDisabled(False)
 
     def exclusiveCheckBoxUpdate(self, trigger, triggered):
         if triggered.isChecked() == trigger.isChecked():
