@@ -35,6 +35,7 @@ class SpritesheetExporter(object):
         self.removeTmp = True
         self.step = 1
         self.layersAsAnimation = False
+        self.layersOnYAxis = False
         self.writeTextureAtlas = False
         self.layersList = []
         self.layersStates = []
@@ -104,7 +105,7 @@ class SpritesheetExporter(object):
                     self.checkLayerStart(layer, doc)
             else:
                 self.start = 0
-                
+
     # - export all frames of the animation in a temporary folder as png
     # - create a new document of the right dimensions
     #   according to self.rows and self.columns
@@ -136,28 +137,29 @@ class SpritesheetExporter(object):
             doc.exportImage(imagePath, InfoObject())
             if(debugging):
                 debugPrint("exporting frame " + str(num) + " at " + imagePath)
-            
+
         def getLayerState(layer, debugging = False):
             if len(layer.childNodes()) != 0:
                 # if it was a group layer
                 # we also check its kids
                 for kid in layer.childNodes():
                     getLayerState(kid, debugging)
-                    
+                    getLayerState(kid, debugging)
+
             else:
                 self.layersStates.append(layer.visible())
                 self.layersList.append(layer)
                 if(not layer.visible()):
                     self.offLayers += 1
                 if(debugging):
-                    debugPrint("saving state " + str(layer.visible()) + 
+                    debugPrint("saving state " + str(layer.visible()) +
                     " of layer " + str(layer))
 
         if debugging:
             print("")
             debugPrint("Export spritesheet start.")
 
-        # clearing lists in case the script is used several times 
+        # clearing lists in case the script is used several times
         # without restarting krita
         self.layersList.clear()
         self.layersStates.clear()
@@ -197,7 +199,7 @@ class SpritesheetExporter(object):
         doc = Krita.instance().activeDocument()
         doc.setBatchmode(True)  # so it won't show the export dialog window
 
-        if (not self.layersAsAnimation):
+        if (not self.layersAsAnimation and not self.layersOnYAxis):
             # check self.end and self.start values
             # and if needed input default value
             if(self.end == self.defaultTime or self.start == self.defaultTime):
@@ -232,7 +234,7 @@ class SpritesheetExporter(object):
             frameIDNum = self.start
         else:
             frameIDNum = 0
-            # save layers state (visible or not)
+             # save layers state (visible or not)
             layers = doc.topLevelNodes()
             for layer in layers:
                 getLayerState(layer, debugging)

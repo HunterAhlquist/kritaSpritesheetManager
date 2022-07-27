@@ -75,8 +75,11 @@ class UISpritesheetExporter(object):
         self.hideableLayout = QVBoxLayout(self.hideableWidget)
 
         # we let people export each layer as an animation frame if they wish
+        # Use layers as Y axis in sprite sheet vs animation frames
         self.layersAsAnimation = QCheckBox()
         self.layersAsAnimation.setChecked(False)
+        self.layersOnYAxis = QCheckBox()
+        self.layersOnYAxis.setChecked(False)
 
         self.writeTextureAtlas = QCheckBox()
         self.writeTextureAtlas.setChecked(False)
@@ -89,13 +92,21 @@ class UISpritesheetExporter(object):
         self.horDir.setChecked(True)
         self.vertDir = QCheckBox()
         self.vertDir.setChecked(False)
+
         self.vertDir.stateChanged.connect(self.exclusiveVertToHor)
         self.horDir.stateChanged.connect(self.exclusiveHorToVert)
+
+        self.layersOnYAxis.stateChanged.connect(self.exclusiveYToAnim)
+        self.layersAsAnimation.stateChanged.connect(self.exclusiveAnimToY)
+
         self.direction = QHBoxLayout()
+        self.layersChoice = QHBoxLayout()
 
         self.spinBoxesWidget = QFrame()
         self.spinBoxesWidget.setFrameShape(QFrame.Panel)
         self.spinBoxesWidget.setFrameShadow(QFrame.Sunken)
+
+
 
         # a box holding the boxes with rows columns and start end
         self.spinBoxes = QHBoxLayout(self.spinBoxesWidget)
@@ -200,21 +211,31 @@ class UISpritesheetExporter(object):
         self.outerLayout.addLayout(self.topLayout, 0)
 
         # all this stuff will be hideable
-        self.addDescribedWidget(parent=self.hideableLayout,
-            listWidgets=[
-                describedWidget(
-                    descri="use layers as animation frames ",
-                    widget=self.layersAsAnimation,
-                    tooltip="Rather than exporting a spritesheet " +
-                    "using as frames\n" + 
+
+        #Y AXIS LAYERS, OR ANIMATION FRAMES LAYERS
+        self.layersChoice.addWidget(QLabel("use layers as "))
+        self.addDescribedWidget(parent=self.layersChoice, listWidgets=[
+            describedWidget(
+                widget=self.layersAsAnimation,
+                descri="animation frames",
+                tooltip="Rather than exporting a spritesheet " +
+                    "using as frames\n" +
                     "each frame of the timeline " +
                     "(all visible layers merged down),\n" +
                     "export instead a spritesheet " +
-                    "using as frames\n" + 
+                    "using as frames\n" +
                     "the current frame of each visible layer")])
 
-        self.hideableLayout.addItem(self.spacer)
-                
+        self.addDescribedWidget(parent=self.layersChoice, listWidgets=[
+            describedWidget(
+                widget=self.layersOnYAxis,
+                descri="Y axis sprites",
+                tooltip="Animation frames along the X axis of a sheet, layers along the Y axis")])
+
+        self.hideableLayout.addLayout(self.layersChoice)
+        self.hideableLayout.addItem(self.spacerBig)
+
+        # SPRITES PLACEMENT DIRECTION
         self.direction.addWidget(QLabel("sprites placement direction: \t"))
         self.addDescribedWidget(parent=self.direction, listWidgets=[
             describedWidget(
@@ -229,7 +250,6 @@ class UISpritesheetExporter(object):
                 tooltip="like so:\n1, 4, 7\n2, 5, 8\n3, 6, 9")])
 
         self.hideableLayout.addLayout(self.direction)
-
         self.hideableLayout.addItem(self.spacerBig)
 
         defaultsHint = QLabel(
@@ -325,14 +345,36 @@ class UISpritesheetExporter(object):
         self.exclusiveCheckBoxUpdate(
             trigger=self.vertDir,
             triggered=self.horDir)
+        if self.vertDir.isChecked() and self.layersOnYAxis.isChecked():
+            self.layersOnYAxis.setChecked(False)
 
     def exclusiveHorToVert(self):
         self.exclusiveCheckBoxUpdate(
             trigger=self.horDir,
             triggered=self.vertDir)
+        if self.vertDir.isChecked() and self.layersOnYAxis.isChecked():
+            self.layersOnYAxis.setChecked(False)
+
+    def exclusiveYToAnim(self):
+        self.exclusiveCheckBoxOrNoneUpdate(
+            trigger=self.layersOnYAxis,
+            triggered=self.layersAsAnimation)
+        if self.vertDir.isChecked() and self.layersOnYAxis.isChecked():
+            self.vertDir.setChecked(False)
+
+    def exclusiveAnimToY(self):
+        self.exclusiveCheckBoxOrNoneUpdate(
+            trigger=self.layersAsAnimation,
+            triggered=self.layersOnYAxis)
+        if self.vertDir.isChecked() and self.layersOnYAxis.isChecked():
+            self.vertDir.setChecked(False)
 
     def exclusiveCheckBoxUpdate(self, trigger, triggered):
         if triggered.isChecked() == trigger.isChecked():
+            triggered.setChecked(not trigger.isChecked())
+
+    def exclusiveCheckBoxOrNoneUpdate(self, trigger, triggered):
+        if triggered.isChecked() == True:
             triggered.setChecked(not trigger.isChecked())
 
     def toggleHideable(self):
@@ -375,7 +417,7 @@ class UISpritesheetExporter(object):
         if self.doc and self.doc.fileName():
             self.exportPath = Path(self.doc.fileName()).parents[0]
         self.exportDirTx.setText(str(self.exportPath))
-        
+
 
     def changeSpritesExportDir(self):
         self.SpritesExportDirDialog = QFileDialog()
@@ -397,6 +439,7 @@ class UISpritesheetExporter(object):
         self.exp.exportName = self.exportName.text().split('.')[0]
         self.exp.exportDir = Path(self.exportPath)
         self.exp.layersAsAnimation = self.layersAsAnimation.isChecked()
+        self.exp.layersOnYAxis = self.layersOnYAxis.isChecked()
         self.exp.writeTextureAtlas = self.writeTextureAtlas.isChecked()
         self.exp.isDirectionHorizontal = self.horDir.isChecked()
         self.exp.rows = self.rows.value()
