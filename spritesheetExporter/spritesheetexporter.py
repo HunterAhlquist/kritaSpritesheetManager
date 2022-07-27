@@ -230,7 +230,6 @@ class SpritesheetExporter(object):
                 doc.setCurrentTime(frameIDNum)
             # reset
             frameIDNum = self.start
-
         else:
             frameIDNum = 0
             # save layers state (visible or not)
@@ -249,7 +248,7 @@ class SpritesheetExporter(object):
                 layer.setVisible(False)
                 
             # export each visible layer
-            while(frameIDNum < len(self.layersStates)):
+            while(frameIDNum < len(self.layersStates) - 1):
                 if (self.layersStates[frameIDNum]):
                     self.layersList[frameIDNum].setVisible(True)
                     # refresh the canvas
