@@ -482,5 +482,5 @@ class UISpritesheetExporter(object):
         else:
             # important: we reset spritesheetexporter's spritesExportDir
             self.exp.spritesExportDir = self.exp.defaultPath
-        self.exp.export()
+        self.exp.export(True)
         self.mainDialog.hide()

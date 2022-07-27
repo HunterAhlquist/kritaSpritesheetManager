@@ -250,7 +250,7 @@ class SpritesheetExporter(object):
                 layer.setVisible(False)
 
             curPos = 0;
-            for l in range(0, len(self.layersList)):
+            for l in range(0, len(self.layersList) - 1):
                 self.layersList[l].setVisible(True)
                 for f in range(0, self.columns):
                     doc.setCurrentTime(f)
@@ -269,7 +269,7 @@ class SpritesheetExporter(object):
             layers = doc.topLevelNodes()
             for layer in layers:
                 getLayerState(layer, debugging)
-            framesNum = len(self.layersList)
+            framesNum = len(self.layersList) - 1
             
             # for compatibility between animated frames as frames
             # and layers as frames
@@ -372,7 +372,7 @@ class SpritesheetExporter(object):
 
 
         textureAtlas = { "frames": [ ] }
-        while (frameIDNum <= self.end):
+        while (frameIDNum <= framesNum):
             doc.waitForDone()
             if(not self.layersAsAnimation or (self.layersAsAnimation and self.layersStates[frameIDNum])):
                 img = str(spritesExportPath(fileNum(frameIDNum) + ".png"))
